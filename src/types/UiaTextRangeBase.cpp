@@ -130,7 +130,7 @@ const IdType UiaTextRangeBase::GetId() const noexcept
     return _id;
 }
 
-const til::point UiaTextRangeBase::GetEndpoint(TextPatternRangeEndpoint endpoint) const noexcept
+const COORD UiaTextRangeBase::GetEndpoint(TextPatternRangeEndpoint endpoint) const noexcept
 {
     switch (endpoint)
     {
@@ -152,8 +152,6 @@ const til::point UiaTextRangeBase::GetEndpoint(TextPatternRangeEndpoint endpoint
 // - true if range is degenerate, false otherwise.
 bool UiaTextRangeBase::SetEndpoint(TextPatternRangeEndpoint endpoint, const COORD val) noexcept
 {
-#pragma warning(push)
-#pragma warning(disable : 26447)
     const auto bufferSize = _getBufferSize();
     switch (endpoint)
     {
@@ -180,7 +178,6 @@ bool UiaTextRangeBase::SetEndpoint(TextPatternRangeEndpoint endpoint, const COOR
     }
     return IsDegenerate();
 }
-#pragma warning(pop)
 
 // Routine Description:
 // - returns true if the range is currently degenerate (empty range).
@@ -279,8 +276,9 @@ IFACEMETHODIMP UiaTextRangeBase::ExpandToEnclosingUnit(_In_ TextUnit unit) noexc
         else if (unit <= TextUnit_Line)
         {
             // expand to line
-            _start = til::point{ ptrdiff_t{ 0 }, _start.y() };
-            _end = til::point{ ptrdiff_t{ 0 }, base::ClampAdd(_start.y(), 1) };
+            _start.X = 0;
+            _end.X = 0;
+            _end.Y = base::ClampAdd(_start.Y, 1);
         }
         else
         {
@@ -732,8 +730,8 @@ try
     const auto oldViewport = _pData->GetViewport().ToInclusive();
     const auto viewportHeight = _getViewportHeight(oldViewport);
     // range rows
-    const base::ClampedNumeric<short> startScreenInfoRow = _start.y();
-    const base::ClampedNumeric<short> endScreenInfoRow = _end.y();
+    const base::ClampedNumeric<short> startScreenInfoRow = _start.Y;
+    const base::ClampedNumeric<short> endScreenInfoRow = _end.Y;
     // screen buffer rows
     const base::ClampedNumeric<short> topRow = 0;
     const base::ClampedNumeric<short> bottomRow = _pData->GetTextBuffer().TotalRowCount() - 1;
@@ -920,7 +918,7 @@ void UiaTextRangeBase::_getBoundingRect(_In_ const COORD startAnchor, _In_ const
 void UiaTextRangeBase::_moveEndpointByUnitCharacter(_In_ const int moveCount,
                                                     _In_ const TextPatternRangeEndpoint endpoint,
                                                     _Out_ gsl::not_null<int*> const pAmountMoved,
-                                                    _In_ const bool preventBufferEnd)
+                                                    _In_ const bool preventBufferEnd) noexcept
 {
     *pAmountMoved = 0;
 
@@ -934,7 +932,7 @@ void UiaTextRangeBase::_moveEndpointByUnitCharacter(_In_ const int moveCount,
     const auto& buffer = _pData->GetTextBuffer();
 
     bool success = true;
-    auto target = GetEndpoint(endpoint);
+    til::point target = GetEndpoint(endpoint);
     while (std::abs(*pAmountMoved) < std::abs(moveCount) && success)
     {
         switch (moveDirection)
@@ -1066,7 +1064,7 @@ void UiaTextRangeBase::_moveEndpointByUnitWord(_In_ const int moveCount,
 void UiaTextRangeBase::_moveEndpointByUnitLine(_In_ const int moveCount,
                                                _In_ const TextPatternRangeEndpoint endpoint,
                                                _Out_ gsl::not_null<int*> const pAmountMoved,
-                                               _In_ const bool preventBufferEnd)
+                                               _In_ const bool preventBufferEnd) noexcept
 {
     *pAmountMoved = 0;
 
@@ -1150,7 +1148,7 @@ void UiaTextRangeBase::_moveEndpointByUnitLine(_In_ const int moveCount,
 void UiaTextRangeBase::_moveEndpointByUnitDocument(_In_ const int moveCount,
                                                    _In_ const TextPatternRangeEndpoint endpoint,
                                                    _Out_ gsl::not_null<int*> const pAmountMoved,
-                                                   _In_ const bool preventBufferEnd)
+                                                   _In_ const bool preventBufferEnd) noexcept
 {
     *pAmountMoved = 0;
 
