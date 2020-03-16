@@ -84,7 +84,7 @@ namespace Microsoft::Console::Types
         ~UiaTextRangeBase() = default;
 
         const IdType GetId() const noexcept;
-        const COORD GetEndpoint(TextPatternRangeEndpoint endpoint) const noexcept;
+        const til::point GetEndpoint(TextPatternRangeEndpoint endpoint) const noexcept;
         bool SetEndpoint(TextPatternRangeEndpoint endpoint, const COORD val) noexcept;
         const bool IsDegenerate() const noexcept;
 
@@ -147,8 +147,8 @@ namespace Microsoft::Console::Types
         // measure units in the form [_start, _end).
         // These are in the TextBuffer coordinate space.
         // NOTE: _start is inclusive, but _end is exclusive
-        COORD _start{};
-        COORD _end{};
+        til::point _start{};
+        til::point _end{};
 
         // This is used by tracing to extract the text value
         // that the UiaTextRange currently encompasses.
